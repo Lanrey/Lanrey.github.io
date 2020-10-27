@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2020-10-27T21:01:02+01:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Sola’s Blog</title><subtitle>Blog about all things programming.</subtitle><entry><title type="html">Using The Router Design Pattern in Node.Js</title><link href="http://localhost:4000/2020/10/27/using-the-router-design-pattern-in-nodejs/" rel="alternate" type="text/html" title="Using The Router Design Pattern in Node.Js" /><published>2020-10-27T20:19:14+01:00</published><updated>2020-10-27T20:19:14+01:00</updated><id>http://localhost:4000/2020/10/27/using-the-router-design-pattern-in-nodejs</id><content type="html" xml:base="http://localhost:4000/2020/10/27/using-the-router-design-pattern-in-nodejs/">&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;How do you tame a bunch of if-else statements or switch statement that grows with every feature request? How do you handle conditions that require multiple evaluations?&lt;/p&gt;
+
+&lt;p&gt;Typically, in Node.js, asides using if-else statements and switch statements, ternary operators can also be used in evaluating multiple conditions, but this approach becomes harder to read when the conditions become large, and even harder to read when the ternary operators become nested.&lt;/p&gt;
+
+&lt;p&gt;The router pattern approaches this problem by using objects for lookups, think &lt;em&gt;hashmaps&lt;/em&gt; or &lt;em&gt;dictionaries&lt;/em&gt; and replaces control flow with datastructures. This approach also enables separation of concerns, wrapping business logic (conditions) as routes, then creating a dispatcher function (router). Using this approach makes your codebase more functional, improving code readability, and makes your codebase easier to test.&lt;/p&gt;
+
+&lt;p&gt;In this article, we will refactor an existing sample codebase, that is riddled with numerous if-else statements. The article would also provide a step-by-step refactor process, and eliminate all if-else statements with object lookups &lt;strong&gt;(router pattern)&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;example&quot;&gt;Example&lt;/h2&gt;
+
+&lt;p&gt;We will be refactoring some code for an order service that changes the state of an order based on different order status events.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    /// List of possible events order service can process
+    let orderStatusEvents = {
+        orderCreated: 'order-made',
+        orderCheck: 'order-check-in-progress'
+        orderAccepted: 'order-accepted',
+        orderConfirmed: 'order-confirmed',
+        orderDelivered: 'order-delivered',
+    }
+    
+    let orderDispatcher = (orderStatus) =&amp;gt; {
+        if (Object.is(orderStatus, orderStatusEvents.orderCreated)) {
+            //hypothetical function for processing order created
+            orderCreated(orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderCheck) {
+            orderCheck(orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderAccepted) {
+            orderAccepted(orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderConfirmed) {
+            orderConfirmed(orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderDelivered) {
+            orderDelivered(orderStatus);
+        }
+        return &quot;There has been an error processing this error!!&quot;;
+    };
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So far, this order service can respond to a set of events. If you ask the order service to process an event it doesn’t understand, it responds with a fallback message.&lt;/p&gt;
+
+&lt;p&gt;At the moment, all of the logic lives in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderDispatcher&lt;/code&gt; function. The function currently has 6 behaviours, so there are 5 if-else statements and one fallback return statement. The code is still relatively short right now, due to the number of events the order dispatcher currently supports, for each new event added, a new if-else statement would be added to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderDispatcher&lt;/code&gt; function .&lt;/p&gt;
+
+&lt;p&gt;Ballooning if-else or switch statements are a code smell that suggests the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderDispatcher&lt;/code&gt; function might have too many responsibilities.&lt;/p&gt;
+
+&lt;p&gt;So let’s refactor this codebase with the Router design pattern.&lt;/p&gt;
+
+&lt;h2 id=&quot;step-1---extract-each-case-into-a-separate-function-list-them-in-a-data-structure&quot;&gt;Step 1 - Extract each case into a separate function, list them in a data structure&lt;/h2&gt;
+
+&lt;p&gt;Let’s move the code for the order status received into an object called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderStatusResponses&lt;/code&gt; using the events as the key.&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; let orderStatusResponses = {
+     'order-made': (orderStatus) =&amp;gt; orderCreated(orderStatus),
+     'order-check-in-progress': (orderStatus) =&amp;gt; ordercheck(orderStatus),
+     'order-accepted': (orderStatus) =&amp;gt; orderAccepted(orderStatus),
+     'order-confirmed': (orderStatus) =&amp;gt; orderConfirmed(orderStatus),
+     'order-delivered': (orderStatus) =&amp;gt; orderDelivered(orderStatus),
+ }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now that we’ve moved each event into the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderStatusResponses&lt;/code&gt; object, we can replace the cases by looking up the appropriate &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderstatusResponses&lt;/code&gt; function and invoking it. At this point, our code should still work exactly as before.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; 
+     let orderDispatcher = (orderStatus) =&amp;gt; {
+        if (Object.is(orderStatus, orderStatusEvents.orderCreated)) {
+            return orderStatusResponses['order-made'](orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderCheck) {
+            return orderStatusResponses['order-check-in-progress'](orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderAccepted) {
+            return orderStatusResponses['order-accepted'](orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderConfirmed) {
+            return orderStatusResponses['order-confirmed'](orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderDelivered) {
+            return orderStatusResponses[order-delivered'](orderStatus);
+        }
+        return &quot;There has been an error processing this error!!&quot;;
+    };
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;step-2---replace-the-body-of-each-case-with-an-invocation-of-that-function&quot;&gt;Step 2 - Replace the body of each case with an invocation of that function&lt;/h2&gt;
+
+&lt;p&gt;Let’s collapse the cascading if-else statements. Since each &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderStatusEvents&lt;/code&gt; is listed with the corresponding event  in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderStatusResponses&lt;/code&gt; object, we can use the orderstatus to directly look up the appropriate response function.&lt;/p&gt;
+
+&lt;p&gt;If a matching response function is found we’ll invoke it.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; 
+ let orderDispatcher = (orderStatus) =&amp;gt; {
+     let orderStatusResponse = orderStatusResponses[orderStatus];
+     if (orderStatusResponse) {
+         return orderStatusResponse(orderStatus);
+     }
+     return &quot;There has been an error processing this error!!&quot;;
+ }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So we have collapsed a 5 case if-else statement into one! In the next step we’ll eliminate the if-else statement altogether by extracting the fallback behaviour into a function of its own. if no response is matched, we’ll use the double pipe operator to insert the fallback response.&lt;/p&gt;
+
+&lt;h2 id=&quot;step-3---replace-the-ifelse-statement-with-one-function-lookup-and-invocation&quot;&gt;Step 3 - Replace the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;if...else&lt;/code&gt; statement with one function lookup and invocation.&lt;/h2&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; let fallback = () =&amp;gt; &quot;There has been an error processing this error!!&quot;;
+ 
+  let orderDispatcher = (orderStatus) =&amp;gt; {
+     let orderStatusResponse = orderStatusResponses[orderStatus] || fallback;
+    return orderStatusResponse(orderStatus);
+ }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Another refactor that can happen will be to put a representation of a fallback e.g, an empty string “ “, when the required event isn’t defined, in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderStatusResponses&lt;/code&gt; object, this would eliminate the need for the pipe operator in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderDispatcher&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;In refactoring the sample codebase, we’ve learnt how to use the router pattern to prevent &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;if...else&lt;/code&gt; ballooning, and have shown how to replace control flow with datastructures. To extend the codebase i.e, add and process a new type of event, we just put the new event and it’s corresponding response in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderStatusEvents&lt;/code&gt; object, there won’t be any changes to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;orderDispatcher&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;p&gt;The router pattern helps us discover common needs across if-else cases and provide a flexible interface to DRY them up.&lt;/p&gt;</content><author><name></name></author><category term="DesignPatterns" /><summary type="html">Introduction How do you tame a bunch of if-else statements or switch statement that grows with every feature request? How do you handle conditions that require multiple evaluations? Typically, in Node.js, asides using if-else statements and switch statements, ternary operators can also be used in evaluating multiple conditions, but this approach becomes harder to read when the conditions become large, and even harder to read when the ternary operators become nested. The router pattern approaches this problem by using objects for lookups, think hashmaps or dictionaries and replaces control flow with datastructures. This approach also enables separation of concerns, wrapping business logic (conditions) as routes, then creating a dispatcher function (router). Using this approach makes your codebase more functional, improving code readability, and makes your codebase easier to test. In this article, we will refactor an existing sample codebase, that is riddled with numerous if-else statements. The article would also provide a step-by-step refactor process, and eliminate all if-else statements with object lookups (router pattern) Example</summary></entry></feed>

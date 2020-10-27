@@ -5,7 +5,6 @@ date:   2020-10-27 20:19:14 +0100
 categories: DesignPatterns
 ---
 
-# Using Router Design Pattern in Node.js
 
 ## Introduction
  How do you tame a bunch of if-else statements or switch statement that grows with every feature request? How do you handle conditions that require multiple evaluations?
@@ -14,9 +13,10 @@ categories: DesignPatterns
  
  The router pattern approaches this problem by using objects for lookups, think *hashmaps* or *dictionaries* and replaces control flow with datastructures. This approach also enables separation of concerns, wrapping business logic (conditions) as routes, then creating a dispatcher function (router). Using this approach makes your codebase more functional, improving code readability, and makes your codebase easier to test.
  
- In this article, we will refactor an existing sample codebase, that is riddled with numerous if-else statements. The article would also provide a step-by-step refactor process, and eliminate all if-else statements with object lookups **(router pattern)**.
+ In this article, we will refactor an existing sample codebase, that is riddled with numerous if-else statements. The article would also provide a step-by-step refactor process, and eliminate all if-else statements with object lookups **(router pattern)**
  
- ## Example
+## Example
+
  We will be refactoring some code for an order service that changes the state of an order based on different order status events.
 
  ```
@@ -54,7 +54,7 @@ categories: DesignPatterns
  
  So let's refactor this codebase with the Router design pattern.
  
- ## Step 1 - Extract each case into a separate function, list them in a data structure
+## Step 1 - Extract each case into a separate function, list them in a data structure
  
  Let's move the code for the order status received into an object called `orderStatusResponses` using the events as the key.
  ```
@@ -87,7 +87,7 @@ categories: DesignPatterns
     };
  ```
  
- ## Step 2 - Replace the body of each case with an invocation of that function
+## Step 2 - Replace the body of each case with an invocation of that function
  
  Let's collapse the cascading if-else statements. Since each `orderStatusEvents` is listed with the corresponding event  in the `orderStatusResponses` object, we can use the orderstatus to directly look up the appropriate response function.
  
@@ -106,7 +106,7 @@ categories: DesignPatterns
  
  So we have collapsed a 5 case if-else statement into one! In the next step we'll eliminate the if-else statement altogether by extracting the fallback behaviour into a function of its own. if no response is matched, we'll use the double pipe operator to insert the fallback response.
  
- ## Step 3 - Replace the `if...else` statement with one function lookup and invocation.
+## Step 3 - Replace the `if...else` statement with one function lookup and invocation.
  
  ```
  let fallback = () => "There has been an error processing this error!!";
@@ -126,11 +126,6 @@ In refactoring the sample codebase, we've learnt how to use the router pattern t
 The router pattern helps us discover common needs across if-else cases and provide a flexible interface to DRY them up. 
 
  
- 
- 
- 
-
-
 
 
 

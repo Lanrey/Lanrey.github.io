@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Using The Router Design Pattern in Node.Js | Sola’s Blog</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Using The Router Design Pattern in Node.Js" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Introduction How do you tame a bunch of if-else statements or switch statement that grows with every feature request? How do you handle conditions that require multiple evaluations? Typically, in Node.js, asides using if-else statements and switch statements, ternary operators can also be used in evaluating multiple conditions, but this approach becomes harder to read when the conditions become large, and even harder to read when the ternary operators become nested. The router pattern approaches this problem by using objects for lookups, think hashmaps or dictionaries and replaces control flow with datastructures. This approach also enables separation of concerns, wrapping business logic (conditions) as routes, then creating a dispatcher function (router). Using this approach makes your codebase more functional, improving code readability, and makes your codebase easier to test. In this article, we will refactor an existing sample codebase, that is riddled with numerous if-else statements. The article would also provide a step-by-step refactor process, and eliminate all if-else statements with object lookups (router pattern) Example" />
+<meta property="og:description" content="Introduction How do you tame a bunch of if-else statements or switch statement that grows with every feature request? How do you handle conditions that require multiple evaluations? Typically, in Node.js, asides using if-else statements and switch statements, ternary operators can also be used in evaluating multiple conditions, but this approach becomes harder to read when the conditions become large, and even harder to read when the ternary operators become nested. The router pattern approaches this problem by using objects for lookups, think hashmaps or dictionaries and replaces control flow with datastructures. This approach also enables separation of concerns, wrapping business logic (conditions) as routes, then creating a dispatcher function (router). Using this approach makes your codebase more functional, improving code readability, and makes your codebase easier to test. In this article, we will refactor an existing sample codebase, that is riddled with numerous if-else statements. The article would also provide a step-by-step refactor process, and eliminate all if-else statements with object lookups (router pattern) Example" />
+<link rel="canonical" href="http://localhost:4000/2020/10/27/using-the-router-design-pattern-in-nodejs/" />
+<meta property="og:url" content="http://localhost:4000/2020/10/27/using-the-router-design-pattern-in-nodejs/" />
+<meta property="og:site_name" content="Sola’s Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-10-27T20:19:14+01:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Using The Router Design Pattern in Node.Js" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","url":"http://localhost:4000/2020/10/27/using-the-router-design-pattern-in-nodejs/","headline":"Using The Router Design Pattern in Node.Js","dateModified":"2020-10-27T20:19:14+01:00","datePublished":"2020-10-27T20:19:14+01:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2020/10/27/using-the-router-design-pattern-in-nodejs/"},"description":"Introduction How do you tame a bunch of if-else statements or switch statement that grows with every feature request? How do you handle conditions that require multiple evaluations? Typically, in Node.js, asides using if-else statements and switch statements, ternary operators can also be used in evaluating multiple conditions, but this approach becomes harder to read when the conditions become large, and even harder to read when the ternary operators become nested. The router pattern approaches this problem by using objects for lookups, think hashmaps or dictionaries and replaces control flow with datastructures. This approach also enables separation of concerns, wrapping business logic (conditions) as routes, then creating a dispatcher function (router). Using this approach makes your codebase more functional, improving code readability, and makes your codebase easier to test. In this article, we will refactor an existing sample codebase, that is riddled with numerous if-else statements. The article would also provide a step-by-step refactor process, and eliminate all if-else statements with object lookups (router pattern) Example","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Sola's Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Sola&#39;s Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Using The Router Design Pattern in Node.Js</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2020-10-27T20:19:14+01:00" itemprop="datePublished">Oct 27, 2020
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="introduction">Introduction</h2>
+<p>How do you tame a bunch of if-else statements or switch statement that grows with every feature request? How do you handle conditions that require multiple evaluations?</p>
+
+<p>Typically, in Node.js, asides using if-else statements and switch statements, ternary operators can also be used in evaluating multiple conditions, but this approach becomes harder to read when the conditions become large, and even harder to read when the ternary operators become nested.</p>
+
+<p>The router pattern approaches this problem by using objects for lookups, think <em>hashmaps</em> or <em>dictionaries</em> and replaces control flow with datastructures. This approach also enables separation of concerns, wrapping business logic (conditions) as routes, then creating a dispatcher function (router). Using this approach makes your codebase more functional, improving code readability, and makes your codebase easier to test.</p>
+
+<p>In this article, we will refactor an existing sample codebase, that is riddled with numerous if-else statements. The article would also provide a step-by-step refactor process, and eliminate all if-else statements with object lookups <strong>(router pattern)</strong></p>
+
+<h2 id="example">Example</h2>
+
+<p>We will be refactoring some code for an order service that changes the state of an order based on different order status events.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    /// List of possible events order service can process
+    let orderStatusEvents = {
+        orderCreated: 'order-made',
+        orderCheck: 'order-check-in-progress'
+        orderAccepted: 'order-accepted',
+        orderConfirmed: 'order-confirmed',
+        orderDelivered: 'order-delivered',
+    }
+    
+    let orderDispatcher = (orderStatus) =&gt; {
+        if (Object.is(orderStatus, orderStatusEvents.orderCreated)) {
+            //hypothetical function for processing order created
+            orderCreated(orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderCheck) {
+            orderCheck(orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderAccepted) {
+            orderAccepted(orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderConfirmed) {
+            orderConfirmed(orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderDelivered) {
+            orderDelivered(orderStatus);
+        }
+        return "There has been an error processing this error!!";
+    };
+</code></pre></div></div>
+
+<p>So far, this order service can respond to a set of events. If you ask the order service to process an event it doesn’t understand, it responds with a fallback message.</p>
+
+<p>At the moment, all of the logic lives in the <code class="language-plaintext highlighter-rouge">orderDispatcher</code> function. The function currently has 6 behaviours, so there are 5 if-else statements and one fallback return statement. The code is still relatively short right now, due to the number of events the order dispatcher currently supports, for each new event added, a new if-else statement would be added to the <code class="language-plaintext highlighter-rouge">orderDispatcher</code> function .</p>
+
+<p>Ballooning if-else or switch statements are a code smell that suggests the <code class="language-plaintext highlighter-rouge">orderDispatcher</code> function might have too many responsibilities.</p>
+
+<p>So let’s refactor this codebase with the Router design pattern.</p>
+
+<h2 id="step-1---extract-each-case-into-a-separate-function-list-them-in-a-data-structure">Step 1 - Extract each case into a separate function, list them in a data structure</h2>
+
+<p>Let’s move the code for the order status received into an object called <code class="language-plaintext highlighter-rouge">orderStatusResponses</code> using the events as the key.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> let orderStatusResponses = {
+     'order-made': (orderStatus) =&gt; orderCreated(orderStatus),
+     'order-check-in-progress': (orderStatus) =&gt; ordercheck(orderStatus),
+     'order-accepted': (orderStatus) =&gt; orderAccepted(orderStatus),
+     'order-confirmed': (orderStatus) =&gt; orderConfirmed(orderStatus),
+     'order-delivered': (orderStatus) =&gt; orderDelivered(orderStatus),
+ }
+</code></pre></div></div>
+
+<p>Now that we’ve moved each event into the <code class="language-plaintext highlighter-rouge">orderStatusResponses</code> object, we can replace the cases by looking up the appropriate <code class="language-plaintext highlighter-rouge">orderstatusResponses</code> function and invoking it. At this point, our code should still work exactly as before.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> 
+     let orderDispatcher = (orderStatus) =&gt; {
+        if (Object.is(orderStatus, orderStatusEvents.orderCreated)) {
+            return orderStatusResponses['order-made'](orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderCheck) {
+            return orderStatusResponses['order-check-in-progress'](orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderAccepted) {
+            return orderStatusResponses['order-accepted'](orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderConfirmed) {
+            return orderStatusResponses['order-confirmed'](orderStatus);
+        } else if (Object.is(orderStatus, orderStatusEvents.orderDelivered) {
+            return orderStatusResponses[order-delivered'](orderStatus);
+        }
+        return "There has been an error processing this error!!";
+    };
+</code></pre></div></div>
+
+<h2 id="step-2---replace-the-body-of-each-case-with-an-invocation-of-that-function">Step 2 - Replace the body of each case with an invocation of that function</h2>
+
+<p>Let’s collapse the cascading if-else statements. Since each <code class="language-plaintext highlighter-rouge">orderStatusEvents</code> is listed with the corresponding event  in the <code class="language-plaintext highlighter-rouge">orderStatusResponses</code> object, we can use the orderstatus to directly look up the appropriate response function.</p>
+
+<p>If a matching response function is found we’ll invoke it.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> 
+ let orderDispatcher = (orderStatus) =&gt; {
+     let orderStatusResponse = orderStatusResponses[orderStatus];
+     if (orderStatusResponse) {
+         return orderStatusResponse(orderStatus);
+     }
+     return "There has been an error processing this error!!";
+ }
+</code></pre></div></div>
+
+<p>So we have collapsed a 5 case if-else statement into one! In the next step we’ll eliminate the if-else statement altogether by extracting the fallback behaviour into a function of its own. if no response is matched, we’ll use the double pipe operator to insert the fallback response.</p>
+
+<h2 id="step-3---replace-the-ifelse-statement-with-one-function-lookup-and-invocation">Step 3 - Replace the <code class="language-plaintext highlighter-rouge">if...else</code> statement with one function lookup and invocation.</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> let fallback = () =&gt; "There has been an error processing this error!!";
+ 
+  let orderDispatcher = (orderStatus) =&gt; {
+     let orderStatusResponse = orderStatusResponses[orderStatus] || fallback;
+    return orderStatusResponse(orderStatus);
+ }
+</code></pre></div></div>
+
+<p>Another refactor that can happen will be to put a representation of a fallback e.g, an empty string “ “, when the required event isn’t defined, in <code class="language-plaintext highlighter-rouge">orderStatusResponses</code> object, this would eliminate the need for the pipe operator in the <code class="language-plaintext highlighter-rouge">orderDispatcher</code> function.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>In refactoring the sample codebase, we’ve learnt how to use the router pattern to prevent <code class="language-plaintext highlighter-rouge">if...else</code> ballooning, and have shown how to replace control flow with datastructures. To extend the codebase i.e, add and process a new type of event, we just put the new event and it’s corresponding response in the <code class="language-plaintext highlighter-rouge">orderStatusEvents</code> object, there won’t be any changes to the <code class="language-plaintext highlighter-rouge">orderDispatcher</code> function.</p>
+
+<p>The router pattern helps us discover common needs across if-else cases and provide a flexible interface to DRY them up.</p>
+
+
+  </div><a class="u-url" href="/2020/10/27/using-the-router-design-pattern-in-nodejs/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Sola&#39;s Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Sola&#39;s Blog</li><li><a class="u-email" href="mailto:olusola.akinsulere@gmail.com">olusola.akinsulere@gmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/Lanrey"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">Lanrey</span></a></li><li><a href="https://www.twitter.com/oluso_LA"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">oluso_LA</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Blog about all things programming.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

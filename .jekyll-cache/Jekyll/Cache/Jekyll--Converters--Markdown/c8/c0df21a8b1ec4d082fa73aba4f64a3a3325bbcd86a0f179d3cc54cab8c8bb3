@@ -1,0 +1,11 @@
+I"ä<h2 id="introduction">Introduction</h2>
+<p>How do you tame a bunch of if-else statements or switch statement that grows with every feature request? How do you handle conditions that require multiple evaluations?</p>
+
+<p>Typically, in Node.js, asides using if-else statements and switch statements, ternary operators can also be used in evaluating multiple conditions, but this approach becomes harder to read when the conditions become large, and even harder to read when the ternary operators become nested.</p>
+
+<p>The router pattern approaches this problem by using objects for lookups, think <em>hashmaps</em> or <em>dictionaries</em> and replaces control flow with datastructures. This approach also enables separation of concerns, wrapping business logic (conditions) as routes, then creating a dispatcher function (router). Using this approach makes your codebase more functional, improving code readability, and makes your codebase easier to test.</p>
+
+<p>In this article, we will refactor an existing sample codebase, that is riddled with numerous if-else statements. The article would also provide a step-by-step refactor process, and eliminate all if-else statements with object lookups <strong>(router pattern)</strong></p>
+
+<p>Example</p>
+:ET
